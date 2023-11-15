@@ -38,6 +38,7 @@ We recommend using Anaconda and setting up a new environment for this repository
   conda activate vidfeats_env
   pip install -e .
   ```
+This repository is currently in development. We recommend periodically running the `git pull` command to ensure your local copy stays updated with the latest changes.
 
 This repository utilizes a variety of libraries and pre-trained models for extracting features from video files. To ensure smooth installation and operation, and to avoid conflicts between dependencies, we recommend creating separate conda environments for specific feature extraction tasks. Isolated environments minimize the risk of incompatibility issues with third-party libraries. Detailed instructions for utilizing the various feature extraction functionalities and configuring the additional environments are provided in the usage section.
 
