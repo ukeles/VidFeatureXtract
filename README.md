@@ -85,7 +85,10 @@ python extract_features.py --feature getinfo -d [VIDEOS_DIR]
 ```
 For example:
 ```bash
-python extract_features.py --feature getinfo -v ./sample_video/video1.mp4 
+# for a video file
+python extract_features.py --feature getinfo -v ./sample_video/video1.mp4
+# or for all video files in a directory
+python extract_features.py --feature getinfo -d ./sample_video
 ```
 
 ### RGB-HSV-Luminance Features
