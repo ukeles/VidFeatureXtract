@@ -24,7 +24,7 @@ We recommend using Anaconda and setting up a new environment for this repository
 
 - Clone or download this repository to your local machine. Open your terminal and execute the following commands:
   ```bash
-  git clone https://github.com/ukeles/VidFeatureXtract
+  git clone https://github.com/ukeles/VidFeatureXtract.git
   cd VidFeatureXtract
   ```
 
