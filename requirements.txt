@@ -1,0 +1,15 @@
+numpy
+scipy
+opencv-python
+pandas
+tqdm
+matplotlib
+imageio
+scikit-image
+scikit-learn
+h5py
+av
+pims
+pillow
+onnxruntime-gpu
+insightface

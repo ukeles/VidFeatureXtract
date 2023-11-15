@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title:  'pymoten: scientific python package for computing motion energy features from video'
+tags:
+- computer vision
+- motion energy
+- video processing
+authors:
+- given-names: Anwar O. 
+  family-names: Nunez-Elizalde
+  affiliation: Helen Wills Neuroscience Institute, University of California, Berkeley, CA, USA
+- given-names: Fatma 
+  family-names: Deniz
+  affiliation: Helen Wills Neuroscience Institute, University of California, Berkeley, CA, USA
+- given-names: Tom
+  family-names: Dupré la Tour
+  affiliation: Helen Wills Neuroscience Institute, University of California, Berkeley, CA, USA
+- given-names: Matteo 
+  family-names: Visconti di Oleggio Castello
+  affiliation: Helen Wills Neuroscience Institute, University of California, Berkeley, CA, USA
+- given-names: Jack L.
+  family-names: Gallant
+  affiliation: Helen Wills Neuroscience Institute, University of California, Berkeley, CA, USA
+doi: 10.5281/zenodo.6349625
+date-released: 2021-01-01
+url: "https://github.com/gallantlab/pymoten"
