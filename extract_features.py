@@ -7,12 +7,19 @@
 
 import os
 import argparse
+import numpy as np
 
 from vidfeats.mediaio import Video
 from vidfeats.utils.io_helpers import str2bool
 
 from vidfeats.basic_visual_features.bvisual_extractor import extract_colors, extract_gist, extract_moten
 from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_insight
+
+
+# List of available features for extraction
+features_base = ['getinfo', 'count_frames']
+features_extract = ['colors', 'gist', 'moten', 'face_insg']
+features_list = features_base + features_extract
 
 
 def run_feature_extraction(inputs):
@@ -36,7 +43,6 @@ def run_feature_extraction(inputs):
     Returns:
     --------
     None
-
     """
     # Extracting input parameters
     video_file = inputs['video']
@@ -47,7 +53,6 @@ def run_feature_extraction(inputs):
     image_size = (inputs.get('width',None), inputs.get('height',None))
     nbatches = inputs['nbatches']
     saveviz = inputs['saveviz']
-    
 
     # Create a Video object
     vr = Video(video_file)
@@ -83,7 +88,6 @@ def run_feature_extraction(inputs):
     # ----- Extract RGB-HSV-Luminance features from the video -----
     if feature_name == 'colors':
         print(f'\nExtracting {feature_name} [RGB-HSV-Luminance] features...\n')
-
         extract_colors(vr, output_dir=output_dir, overwrite_ok=overwrite_ok)
 
 
@@ -134,7 +138,7 @@ def run_feature_extraction(inputs):
 
         # Call the extract_moten function to perform the motion-energy extraction.
         extract_moten(vr, params, output_dir=output_dir, overwrite_ok=overwrite_ok)
-    
+
     
     # ----- Detect faces and extract some face-related features using insightface library -----
     # Ref: https://github.com/deepinsight/insightface 
@@ -145,13 +149,14 @@ def run_feature_extraction(inputs):
         print(f'\nExtracting {feature_name} [face-detection] features...\n')
         extract_faces_insight(vr, output_dir=output_dir, overwrite_ok=overwrite_ok,
                               saveviz=saveviz, det_thresh=face_det_thresh)
-        
+
+
     # More feature extraction methods can be added here.
+    
 
-
-
-# ----- List of available features for extraction -----
-features_list = ['getinfo', 'count_frames', 'colors', 'gist', 'moten', 'face_insg']
+    # Save presentation time stamp (PTS) values to be used with extracted features 
+    if feature_name in features_extract:
+        np.save(os.path.join(output_dir,f'{vr.basename}_frame_pts.npy'), vr.pts)
 
 
 def main(args):

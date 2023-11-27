@@ -46,7 +46,15 @@ def extract_faces_insight(vr, output_dir, overwrite_ok=False, saveviz=True, det_
         txt = "Required module 'insightface' not found.\n"\
         +"Please install from 'https://github.com/deepinsight/insightface'"
         raise ModuleNotFoundError(txt)
-        
+    
+    
+    import onnxruntime as ort
+    if 'CUDAExecutionProvider' not in ort.get_available_providers():
+        print('\n\n\nNote that ONNX Runtime was not installed with GPU support.')
+        print('You might consider reinstalling it with:')
+        print('pip install onnxruntime-gpu -U')
+        print('\n\n')
+    
     nframes = vr.frame_count  # Number of frames in the video.
     frame_width, frame_height = vr.resolution  # Resolution of the video (width, height).
     vid_fps = vr.fps # Frames per second of the video.

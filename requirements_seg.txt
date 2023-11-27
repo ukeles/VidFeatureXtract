@@ -1,0 +1,13 @@
+addict
+fairscale
+huggingface_hub
+pycocotools
+PyYAML
+requests
+supervision
+termcolor
+timm
+transformers
+yapf
+nltk
+litellm

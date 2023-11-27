@@ -1,24 +1,23 @@
-name: vidfeats_env
+name: vidfeats_base
 channels:
   - conda-forge
   - defaults
 dependencies:
   - python=3.11
-  - ipython
-  - notebook
   - pip
-  - opencv
+  - av
+  - pims
+  - pillow
   - numpy
   - scipy
   - pandas
   - tqdm
   - matplotlib
+  - imageio
   - scikit-image
-  - scikit-learn
   - h5py
-  - av
-  - pims
-  - pillow
   - pip:
+    - opencv-python
+    - onnx
     - onnxruntime-gpu
     - insightface

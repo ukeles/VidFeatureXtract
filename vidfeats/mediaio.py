@@ -7,6 +7,7 @@ ToDo: Image and Audio classes for image and audio only stimulus files.
 """
 
 import os
+import numpy as np
 
 video_readers = ['pims_av']
 
@@ -69,6 +70,26 @@ class Video:
             self.frame_count = len(vr)
             self.obj = vr
             
+            # Calculate presentation time stamp (PTS) values in seconds
+            toc_lens, toc_ts = np.asarray(vr.toc['lengths']), np.asarray(vr.toc['ts'])
+            tbase = float(vr._time_base)
+            
+            unq_toc_lens = np.unique(toc_lens)
+            if len(unq_toc_lens) == 1:
+                assert unq_toc_lens[0] == 1
+            # special cases for videos with variable frame rate (VFR)
+            elif unq_toc_lens.tolist() == [1, 2]:
+                assert np.sum(toc_lens == 2) == 1
+                assert toc_lens[-1] == 2
+                dtoc_ts = np.diff(toc_ts)
+                # usually the rate oscillates, thus we use dtoc_ts[-2] instead of dtoc_ts[-1]
+                toc_ts = np.r_[toc_ts[0], dtoc_ts, dtoc_ts[-2] ].cumsum()
+            else:
+                raise NotImplementedError(f'This case is not expected!\n{unq_toc_lens.tolist()}')
+            
+            self.pts = toc_ts * tbase
+            
+            
         # [Other video readers can be implemented here]
 
 
@@ -76,7 +97,7 @@ class Video:
         if self._frame_count_timed != self.frame_count:
             print("The number of frames obtained from metadata and manual counting are different!\n"+
                   f"difference (Indexed-Timed): {self.frame_count-self._frame_count_timed} "+
-                  "--might need to confirm the actual number from the experiment log files. "+
+                  "\n--might need to confirm the actual number from the experiment log files. "+
                   "This might be because the video has varying frame rates throughout its duration, "+
                   " i.e., variable frame rate.\n"+
                   f"This code will take the frame count as {self.frame_count}.")
