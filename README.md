@@ -79,19 +79,19 @@ Remaining dependicies of `vidfeats` repo can be installed using `pip`:
 ```bash
 git clone https://github.com/ukeles/VidFeatureXtract.git
 cd VidFeatureXtract
-pip install -r requirements.txt 
-pip install -r requirements_seg.txt
+python -m pip install -r requirements.txt 
+python -m pip install -r requirements_seg.txt
 # finally install this repository in editable mode using pip:
-pip install -e .
+python -m pip install -e .
 ```
 
 In order to use [DensePose](https://github.com/facebookresearch/detectron2/tree/main/projects/DensePose) model for detecting and segmenting human body parts, please install the [Detectron2](https://github.com/facebookresearch/detectron2) library and the DensePose module. 
 ```bash
 # To install the detectron2 library:
-pip install 'git+https://github.com/facebookresearch/detectron2.git'
+python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 # to install the DensePose library for body parts detection:
 # see: https://github.com/facebookresearch/detectron2/blob/main/projects/DensePose/doc/GETTING_STARTED.md
-pip install git+https://github.com/facebookresearch/detectron2@main#subdirectory=projects/DensePose
+python -m pip install 'git+https://github.com/facebookresearch/detectron2@main#subdirectory=projects/DensePose'
 ```
 For additional information about Detectron2, see the [official documentation](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
 
