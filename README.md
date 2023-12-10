@@ -12,14 +12,16 @@ The following features are currently implemented:
   - [Motion-energy](#motion-energy-features)
 - High-level visual features:
   - [Face detection and basic face-related features](#face-detection-and-basic-face-related-features)
-  - ...
+  - [Human body part detection using DensePose](#detection-and-segmentation-of-human-body-parts)
+  - [Semantic segmentation using OneFormer](#semantic-segmentation)
 
 
 ## Getting Started
 
-### Base Installation
-We recommend using Anaconda and setting up a new environment for this repository. This will ensure that the necessary dependencies are installed and managed in a separate environment, without interfering with other Python projects. Follow these steps to set up the environment on a local machine:
+### Installation
+We recommend using Anaconda and setting up a new environment for this repository. This will ensure that the necessary dependencies are installed and managed in a separate environment, without interfering with other Python projects. To use this repo for the extraction of low-level visual features or detecting human faces in video frames, follow the base installation steps. For more advanced functionalities such as human body parts detection and semantic segmentation, please follow the advanced installation section provided below.
 
+#### Base Installation
 - Downlaod and install Anaconda or Miniconda by following the instructions on the [official Anaconda website](https://www.anaconda.com/).
 
 - Clone or download this repository to your local machine. Open your terminal and execute the following commands:
@@ -35,12 +37,64 @@ We recommend using Anaconda and setting up a new environment for this repository
 
 - Activate the environment and install this repository in editable mode using pip:
   ```bash
-  conda activate vidfeats_env
+  conda activate vidfeats_base
   pip install -e .
   ```
 This repository is currently in development. We recommend periodically running the `git pull` command to ensure your local copy stays updated with the latest changes.
 
-This repository utilizes a variety of libraries and pre-trained models for extracting features from video files. To ensure smooth installation and operation, and to avoid conflicts between dependencies, we recommend creating separate conda environments for specific feature extraction tasks. Isolated environments minimize the risk of incompatibility issues with third-party libraries. Detailed instructions for utilizing the various feature extraction functionalities and configuring the additional environments are provided in the usage section.
+
+### Advanced Installation
+Create a new conda virtual environment and activate it:
+```bash
+conda create -n vidfeats_seg
+conda activate vidfeats_seg
+```
+
+Install python and pip
+```bash
+conda install -c conda-forge python=3.11 pip setuptools wheel
+```
+
+It is recommended to first install the Cuda Toolkit for optimal compatibility and ease of installation for other libraries that rely on the `CUDA_HOME` environment variable. After installing the Cuda Toolkit, PyTorch should be installed next, followed by any remaining packages, to ensure an efficient and smooth setup.
+
+See https://pytorch.org/get-started/locally/ for available versions of Cuda Platform used for PyTorch.
+```bash
+# use either
+conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
+# or | ensure that cudatoolkit version is consistent with pytorch-cuda version below
+conda install -c conda-forge cudatoolkit cudatoolkit-dev
+
+# select either (i) or (ii) to set the environment variable CUDA_HOME
+# echo $CUDA_HOME might be used the check if it is already set.
+# (i) if installed via conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
+export CUDA_HOME=$CONDA_PREFIX
+# (ii) if installed via conda install -c conda-forge cudatoolkit cudatoolkit-dev
+export CUDA_HOME=$CONDA_PREFIX/pkgs/cuda-toolkit
+
+# then install PyTorch components
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+
+Remaining dependicies of `vidfeats` repo can be installed using `pip`:
+```bash
+git clone https://github.com/ukeles/VidFeatureXtract.git
+cd VidFeatureXtract
+pip install -r requirements.txt 
+pip install -r requirements_seg.txt
+# finally install this repository in editable mode using pip:
+pip install -e .
+```
+
+In order to use [DensePose](https://github.com/facebookresearch/detectron2/tree/main/projects/DensePose) model for detecting and segmenting human body parts, please install the [Detectron2](https://github.com/facebookresearch/detectron2) library and the DensePose module. 
+```bash
+# To install the detectron2 library:
+pip install 'git+https://github.com/facebookresearch/detectron2.git'
+# to install the DensePose library for body parts detection:
+# see: https://github.com/facebookresearch/detectron2/blob/main/projects/DensePose/doc/GETTING_STARTED.md
+pip install git+https://github.com/facebookresearch/detectron2@main#subdirectory=projects/DensePose
+```
+For additional information about Detectron2, see the [official documentation](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
+
 
 ## Usage
 To extract features from a video file or all video files in a directory, use the [`extract_features.py`](extract_features.py) script as follows:
@@ -173,10 +227,36 @@ Also note that the default threshold value for face detection confidence is set 
 python extract_features.py --feature face_insg -v ./sample_video/video1.mp4 --thresh 0.6 
 ```
 
+### Detection and Segmentation of Human Body Parts
+We leverage the [DensePose](https://github.com/facebookresearch/detectron2/tree/main/projects/DensePose) module from [Detectron2](https://github.com/facebookresearch/detectron2) for detecting and segmenting human body parts within video frames. DensePose is instrumental in extracting detailed human body shapes and poses. It achieves this by mapping all human pixels in an RGB image to the 3D surface of the human body. We specifically utilize DensePose for frame-by-frame analysis, enabling us to map human pixels into three distinct body part areas: the head, hands, and other body parts. The extracted data is then saved in a format that is efficient in terms of memory usage.
 
+To perform human body part detection and segmentation:
+```bash
+# use -v for a video file or -d for all video files in a directory
+python extract_features.py --feature densepose -v [VIDEO_PATH] -o [OUTPUT_DIR]
+```
+
+### Semantic Segmentation
+We utilize the OneFormer framework for a detailed pixel-wise segmentation of video frames. OneFormer segments and classifies various objects and elements in a scene, delivering high accuracy and providing rich contextual information. For details on OneFormer and its capabilities, please refer to their [official documentation](https://github.com/SHI-Labs/OneFormer). We employ the OneFormer model via the HuggingFace [transformers](https://huggingface.co/docs/transformers/main/en/model_doc/oneformer) library. 
+
+
+To perform semantic segmentation with OneFormer:
+```bash
+# use -v for a video file or -d for all video files in a directory
+# option 1: to employ OneFormer model trained on the ADE20k dataset (150 categories, large-sized version, Swin backbone)
+# see: https://huggingface.co/shi-labs/oneformer_ade20k_swin_large
+python extract_features.py --feature oneformer_ade -v [VIDEO_PATH] -o [OUTPUT_DIR]
+# option 2: to employ OneFormer model trained on the COCO dataset (133 categories, large-sized version, Swin backbone):
+python extract_features.py --feature oneformer_coco -v [VIDEO_PATH] -o [OUTPUT_DIR]
+```
+
+Optional for 'oneformer_ade' and 'oneformer_coco':
+- `--extraction_fps`: The frame rate to sample the video for feature extraction. Use this to specify a lower frame rate for processing, by which we can control the number of frames per second to be analyzed, enabling a balance between processing speed and the level of detail captured from the video. 
+- `--saveviz`: Enable this option to save visualizations of the processed feature detections (e.g., faces) as a video file. The resulting visualization will be stored in the specified output_dir. Default is True.
+
+Note that resizing or batching the video is not required for this feature extraction, hence these options are omitted to avoid confusion and usage errors.
 
 ### More features are coming here...
-
 
 ## License
 This repository is released under the BSD 3-Clause license. See the [LICENSE](LICENSE) file for details.

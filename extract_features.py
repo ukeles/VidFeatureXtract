@@ -14,11 +14,15 @@ from vidfeats.utils.io_helpers import str2bool
 
 from vidfeats.basic_visual_features.bvisual_extractor import extract_colors, extract_gist, extract_moten
 from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_insight
+from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_yolov8face, extract_faces_yolov8face_cv
+from vidfeats.facedetect_bodyparts.bodyparts_extractor import extract_bodyparts_densepose
+from vidfeats.semantic_segmentation.oneformer_extractor import extract_oneformer_segmentation
 
 
 # List of available features for extraction
 features_base = ['getinfo', 'count_frames']
-features_extract = ['colors', 'gist', 'moten', 'face_insg']
+features_extract = ['colors', 'gist', 'moten', 'face_insg', 'face_yolov8face',
+                    'face_yolov8face_cv', 'densepose', 'oneformer_ade', 'oneformer_coco']
 features_list = features_base + features_extract
 
 
@@ -84,6 +88,30 @@ def run_feature_extraction(inputs):
     if feature_name == 'count_frames':
         vr.examine_nframes()
         return
+    
+    if inputs.get('extraction_fps', None) is not None:
+        extraction_fps = inputs['extraction_fps'] # desired frame rate for extraction
+
+        nframes = vr.frame_count  # Number of frames in the video.
+        vid_fps = vr.fps # Frames per second of the video.
+        vr_pts = vr.pts
+        
+        extract_interval = np.round(vid_fps / extraction_fps)
+        extract_frames = np.arange(0, nframes, extract_interval, dtype=int)
+        
+        vr.extraction_fps = extraction_fps
+        vr.extraction_frames = extract_frames
+        vr.extraction_pts = vr_pts[extract_frames]
+    
+
+    # Save presentation time stamp (PTS) values to be used with extracted features 
+    if feature_name in features_extract:
+        np.save(os.path.join(output_dir,f'{vr.basename}_frame_pts.npy'), vr.pts)
+        
+        if vr.extraction_pts is not None:
+            np.save(os.path.join(output_dir,f'{vr.basename}_extractionfps_{vr.extraction_fps}_pts.npy'), 
+                    np.c_[vr.extraction_frames, vr.extraction_pts] )
+
 
     # ----- Extract RGB-HSV-Luminance features from the video -----
     if feature_name == 'colors':
@@ -139,24 +167,63 @@ def run_feature_extraction(inputs):
         # Call the extract_moten function to perform the motion-energy extraction.
         extract_moten(vr, params, output_dir=output_dir, overwrite_ok=overwrite_ok)
 
-    
+
+    # ----- Detect faces and extract some face-related features using YOLOv8-face library -----
+    # Ref: https://github.com/derronqi/yolov8-face
+    elif feature_name == 'face_yolov8face':
+        det_thresh = inputs.get('thresh', 0.3)
+        
+        print(f'\nExtracting {feature_name} [face-detection] features...\n')
+        extract_faces_yolov8face(vr, output_dir=output_dir, overwrite_ok=overwrite_ok,
+                              saveviz=saveviz, det_thresh=det_thresh)
+
+    # ----- Detect faces and extract some face-related features using YOLOv8 and openCV -----
+    # Ref: https://github.com/derronqi/yolov8-face
+    #      https://github.com/hpc203/yolov8-face-landmarks-opencv-dnn
+    elif feature_name == 'face_yolov8face_cv':
+        det_thresh = inputs.get('thresh', 0.3)
+        
+        print(f'\nExtracting {feature_name} [face-detection] features...\n')
+        extract_faces_yolov8face_cv(vr, output_dir=output_dir, overwrite_ok=overwrite_ok,
+                              saveviz=saveviz, det_thresh=det_thresh)
+
     # ----- Detect faces and extract some face-related features using insightface library -----
     # Ref: https://github.com/deepinsight/insightface 
     elif feature_name == 'face_insg':
-        face_det_thresh = inputs.get('thresh', None)
-        face_det_thresh = face_det_thresh if face_det_thresh else 0.5
+        det_thresh = inputs.get('thresh', 0.5)
         
         print(f'\nExtracting {feature_name} [face-detection] features...\n')
         extract_faces_insight(vr, output_dir=output_dir, overwrite_ok=overwrite_ok,
-                              saveviz=saveviz, det_thresh=face_det_thresh)
+                              saveviz=saveviz, det_thresh=det_thresh)
+
+
+    # ----- Detect human body parts using Densepose in Detectron2 library -----
+    # Ref: https://github.com/facebookresearch/detectron2/blob/main/projects/DensePose 
+    elif feature_name == 'densepose':
+        det_thresh = inputs.get('thresh', 0.5)
+        modelzoo_dir = inputs.get('modelzoo', os.path.abspath('./mweights/densepose') )
+        
+        print(f'\nExtracting {feature_name} [face-detection] features...\n')
+        extract_bodyparts_densepose(vr, output_dir=output_dir, modelzoo_dir=modelzoo_dir,
+                                    overwrite_ok=overwrite_ok, saveviz=saveviz, 
+                                    det_thresh=det_thresh)
+
+
+    elif feature_name.startswith('oneformer'):
+ 
+        if feature_name.endswith('coco'):
+            model_name = 'oneformer_coco_swin_large'
+        elif feature_name.endswith('ade'):
+            model_name = 'oneformer_ade20k_swin_large'
+        
+        print(f'\nExtracting {feature_name} [semantic segmentation] features...\n')
+        extract_oneformer_segmentation(vr, output_dir=output_dir, model_name=model_name,
+                                       overwrite_ok=overwrite_ok, saveviz=saveviz)
 
 
     # More feature extraction methods can be added here.
     
 
-    # Save presentation time stamp (PTS) values to be used with extracted features 
-    if feature_name in features_extract:
-        np.save(os.path.join(output_dir,f'{vr.basename}_frame_pts.npy'), vr.pts)
 
 
 def main(args):
@@ -232,11 +299,15 @@ if __name__ == "__main__":
     # Additional settings for specific feature extraction scenarios
     parser.add_argument('--motenprep', type=str, default='opencv', 
                         help='moten specific parameter (see the code for details)')
+    
     parser.add_argument('--saveviz', type=str2bool, default=True,
                         help='Whether to save the visualization of detections for semantic feature options')
     parser.add_argument('--thresh', type=float,
                         help='The threshold for detection confidence for semantic feature options')
-    
+    parser.add_argument('--modelzoo', type=float,
+                        help='The path to pre-trained model weights')
+    parser.add_argument('--extraction_fps', type=float,
+                        help='The frame rate to sample the video for feature extraction.')
     
     # Parse command-line arguments
     args = parser.parse_args()

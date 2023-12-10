@@ -88,6 +88,10 @@ class Video:
                 raise NotImplementedError(f'This case is not expected!\n{unq_toc_lens.tolist()}')
             
             self.pts = toc_ts * tbase
+            # These are used if extraction_fps is provided in inputs.
+            self.extraction_fps = None
+            self.extraction_pts = None
+            self.extraction_frames = None
             
             
         # [Other video readers can be implemented here]

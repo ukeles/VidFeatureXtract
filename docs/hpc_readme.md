@@ -22,7 +22,7 @@ sh ./Miniconda3-latest-Linux-x86_64.sh
 After installation, follow the on-screen instructions to initialize and configure Miniconda. For detailed information on software installation on the cluster, refer to the [Caltech HPC Center's software and modules documentation](https://www.hpc.caltech.edu/documentation/software-and-modules).
 
 ## Installing the *vidfeats* Repository for Feature Extraction
-To install the `vidfeats` repository for extracting various features from video files, please refer to the installation instructions provided in the repository's [README](../README.md#base-installation) file.
+To install the `vidfeats` repository for extracting various features from video files, please refer to the installation instructions provided in the repository's [README](../README.md#installation) file.
 
 ## Running Jobs
 Provide instructions on how to run jobs on the cluster.

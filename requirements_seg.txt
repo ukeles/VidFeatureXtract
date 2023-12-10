@@ -8,6 +8,4 @@ supervision
 termcolor
 timm
 transformers
-yapf
-nltk
-litellm
+ultralytics
