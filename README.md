@@ -43,7 +43,7 @@ We recommend using Anaconda and setting up a new environment for this repository
 This repository is currently in development. We recommend periodically running the `git pull` command to ensure your local copy stays updated with the latest changes.
 
 
-### Advanced Installation
+#### Advanced Installation
 Create a new conda virtual environment and activate it:
 ```bash
 conda create -n vidfeats_seg
