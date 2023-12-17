@@ -8,6 +8,148 @@ ToDo: Image and Audio classes for image and audio only stimulus files.
 
 import os
 import numpy as np
+import av
+
+def get_pts_av(video_file, fps):
+    """
+    Retrieves the presentation timestamp (PTS), decoding timestamp (DTS), 
+    and frame count from a video file.
+
+    Parameters
+    ----------
+    video_file : str
+        The path to the input video file.
+    fps : float
+        Frames per second of the video.
+    Returns
+    -------
+    np.ndarray
+        Array of presentation timestamps (PTS) in seconds.
+    np.ndarray
+        Array of decoding timestamps (DTS) in seconds.
+    int
+        Total number of frames in the video.
+        
+    Notes: 
+        In some stim videos pts obtained via PyAv/Pims was not monotonically increasing, 
+        but oscillates. Comparing the dts obtained from PyAv and the pts obtained from  
+        ffpyplayer.player.MediaPlayer, I decided to use the dts as pts for this problematic case.
+        In general, if the video file does not have any such issues, pts and dts values are equal.
+    """
+    with av.open(video_file) as container:
+        # note that this assumption was used in PyAVReaderIndexed() too.
+        stream = container.streams.video[0] 
+
+        # note that getting frames from container.decode(stream) is more straightforward 
+        # than using packets from container.demux(stream) to handle dts values. 
+        dts, pts = [], []
+        for frame in container.decode(stream): 
+            dts_time = float(frame.dts*frame.time_base) if frame.dts is not None else np.NaN
+            dts.append(dts_time)
+            pts.append(frame.time) # alternatively: float(frame.pts * frame.time_base)
+
+    pts = np.asarray(pts)
+    dts = np.asarray(dts)
+    # dts_raw = dts.copy()
+
+    if np.isnan(dts).any():
+        nan_mask = np.isnan(dts)
+        first_nan_index = nan_mask.argmax()
+    
+        # Ensure NaNs are only at the end
+        assert np.all(np.isnan(dts[first_nan_index:]))
+    
+        # Ensure PTS does not contain NaNs
+        assert not np.isnan(pts).any()
+    
+        # Check if PTS is monotonically increasing and 
+        # use its values to fill DTS
+        if np.all(pts[:-1] < pts[1:]):
+            dts[nan_mask] = pts[nan_mask]
+            assert np.all(dts[:-1] < dts[1:])
+        else: # otherwise fill by using the avg_frame_time
+            # Calculate the number of NaNs to fill
+            num_nans = len(dts) - first_nan_index
+            avg_frame_time = 1.0 / fps # in seconds
+
+            # Fill NaNs by extending the linear trend
+            dts[first_nan_index:] = dts[first_nan_index-1] + avg_frame_time*np.arange(1,num_nans+1)
+
+            # Ensure DTS does not contain any other NaNs
+            assert not np.isnan(dts).any()
+            assert np.all(dts[:-1] < dts[1:])
+
+    return pts, dts, len(pts)
+
+
+
+# this option is ~4x slower and requires the package 'ffpyplayer', but quite reliable.
+import time
+def get_pts_mediaplayer(video_file, fps):
+    """
+    Extracts presentation timestamps (PTS) and frame count from a video file
+    using the MediaPlayer from the ffpyplayer library.
+
+    Parameters
+    ----------
+    video_file : str
+        The path to the input video file.
+    fps : float
+        Frames per second of the video.
+
+    Returns
+    -------
+    np.ndarray
+        Array of presentation timestamps (PTS) with the last frame timestamp
+        extrapolated based on the average frame time.
+    int
+        Total number of frames in the video.
+    """
+    print('Running MediaPlayer...')
+
+    from ffpyplayer.player import MediaPlayer
+
+    # MediaPlayer options
+    ff_opts = {
+        'out_fmt': 'rgb24',
+        'an': True,  # Ignore audio stream
+        'sync': 'video'
+    }
+
+    # Initialize MediaPlayer
+    player = MediaPlayer(video_file, ff_opts=ff_opts)
+
+    pts_med = []
+    while True:
+        frame, val = player.get_frame()
+        if val == 'eof':
+            break
+        elif frame is None:
+            time.sleep(0.01)
+        else:
+            _, t = frame
+            pts_med.append(t)
+
+    # Clean up MediaPlayer
+    player.close_player()
+
+    # Assertions to check PTS consistency
+    assert pts_med[0] == pts_med[1], "First two PTS values are not equal."
+    assert not np.isnan(pts_med).any(), "PTS contains NaN values."
+
+    # Prepare the PTS array with an extra NaN value for the last frame
+    pts_med_r = np.r_[pts_med[1:], np.NaN]
+
+    # Calculate average frame time and fill the last NaN value
+    avg_frame_time = 1. / fps
+    pts_med_r[-1] = pts_med_r[-2] + avg_frame_time
+
+    # Ensure PTS is monotonically increasing
+    assert np.all(pts_med_r[:-1] < pts_med_r[1:]), "PTS is not monotonically increasing."
+
+    return pts_med_r, len(pts_med)
+
+
 
 video_readers = ['pims_av']
 
@@ -32,6 +174,10 @@ class Video:
         - reader: String representing the method to read the video. 
                   Default is 'pims_av'.
         """
+        
+        if not os.path.isfile(file):
+            raise FileNotFoundError(f'No such video file: {file}')
+        
         self.file = file
         self.basefile = os.path.basename(file)
         self.basename = os.path.splitext(self.basefile)[0]
@@ -71,28 +217,30 @@ class Video:
             self.obj = vr
             
             # Calculate presentation time stamp (PTS) values in seconds
-            toc_lens, toc_ts = np.asarray(vr.toc['lengths']), np.asarray(vr.toc['ts'])
-            tbase = float(vr._time_base)
+            # read PTS and DTS values from the video file
+            pts_arr, dts_arr, nframes_chk = get_pts_av(self.file, self.fps)
+            assert self.frame_count == nframes_chk
             
-            unq_toc_lens = np.unique(toc_lens)
-            if len(unq_toc_lens) == 1:
-                assert unq_toc_lens[0] == 1
-            # special cases for videos with variable frame rate (VFR)
-            elif unq_toc_lens.tolist() == [1, 2]:
-                assert np.sum(toc_lens == 2) == 1
-                assert toc_lens[-1] == 2
-                dtoc_ts = np.diff(toc_ts)
-                # usually the rate oscillates, thus we use dtoc_ts[-2] instead of dtoc_ts[-1]
-                toc_ts = np.r_[toc_ts[0], dtoc_ts, dtoc_ts[-2] ].cumsum()
+            # these should be equal for packets of length 1 | this assert can be removed. 
+            # toc_lens, toc_ts = np.asarray(vr.toc['lengths']), np.asarray(vr.toc['ts'])
+            # toc_pts = toc_ts * float(vr._time_base)
+            # assert np.allclose(pts_arr[:len(toc_lens)], toc_pts[:len(toc_lens)])
+            
+            if np.all(pts_arr[:-1] < pts_arr[1:]):
+                assert all(pts_arr >= 0), 'Problem in getting PTS values, you may try get_pts_mediaplayer()'
+                self.pts = pts_arr
+                self.pts_org = None
+                self.dts_org = dts_arr
             else:
-                raise NotImplementedError(f'This case is not expected!\n{unq_toc_lens.tolist()}')
+                assert all(dts_arr >= 0), 'Problem in getting DTS values, you may try get_pts_mediaplayer()'
+                self.pts = dts_arr
+                self.pts_org = pts_arr
+                self.dts_org = None
             
-            self.pts = toc_ts * tbase
             # These are used if extraction_fps is provided in inputs.
             self.extraction_fps = None
             self.extraction_pts = None
             self.extraction_frames = None
-            
             
         # [Other video readers can be implemented here]
 

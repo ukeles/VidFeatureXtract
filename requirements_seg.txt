@@ -9,3 +9,6 @@ termcolor
 timm
 transformers
 ultralytics
+onnx
+onnxruntime-gpu
+insightface

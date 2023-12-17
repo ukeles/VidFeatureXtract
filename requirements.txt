@@ -10,6 +10,3 @@ matplotlib
 imageio
 scikit-image
 h5py
-onnx
-onnxruntime-gpu
-insightface
