@@ -13,10 +13,6 @@ from vidfeats.mediaio import Video
 from vidfeats.utils.io_helpers import str2bool
 
 from vidfeats.basic_visual_features.bvisual_extractor import extract_colors, extract_gist, extract_moten
-from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_insight
-from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_yolov8face, extract_faces_yolov8face_cv
-from vidfeats.facedetect_bodyparts.bodyparts_extractor import extract_bodyparts_densepose
-from vidfeats.semantic_segmentation.oneformer_extractor import extract_oneformer_segmentation
 
 
 # List of available features for extraction
@@ -171,6 +167,9 @@ def run_feature_extraction(inputs):
     # ----- Detect faces and extract some face-related features using YOLOv8-face library -----
     # Ref: https://github.com/derronqi/yolov8-face
     elif feature_name == 'face_yolov8face':
+        
+        from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_yolov8face
+        
         det_thresh = inputs.get('thresh', 0.3)
         
         print(f'\nExtracting {feature_name} [face-detection] features...\n')
@@ -181,6 +180,9 @@ def run_feature_extraction(inputs):
     # Ref: https://github.com/derronqi/yolov8-face
     #      https://github.com/hpc203/yolov8-face-landmarks-opencv-dnn
     elif feature_name == 'face_yolov8face_cv':
+        
+        from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_yolov8face_cv
+
         det_thresh = inputs.get('thresh', 0.3)
         
         print(f'\nExtracting {feature_name} [face-detection] features...\n')
@@ -190,6 +192,9 @@ def run_feature_extraction(inputs):
     # ----- Detect faces and extract some face-related features using insightface library -----
     # Ref: https://github.com/deepinsight/insightface 
     elif feature_name == 'face_insg':
+        
+        from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_insight
+
         det_thresh = inputs.get('thresh', 0.5)
         
         print(f'\nExtracting {feature_name} [face-detection] features...\n')
@@ -200,6 +205,9 @@ def run_feature_extraction(inputs):
     # ----- Detect human body parts using Densepose in Detectron2 library -----
     # Ref: https://github.com/facebookresearch/detectron2/blob/main/projects/DensePose 
     elif feature_name == 'densepose':
+
+        from vidfeats.facedetect_bodyparts.bodyparts_extractor import extract_bodyparts_densepose
+
         det_thresh = inputs.get('thresh', 0.5)
         modelzoo_dir = inputs.get('modelzoo', os.path.abspath('./mweights/densepose') )
         
@@ -211,6 +219,8 @@ def run_feature_extraction(inputs):
 
     elif feature_name.startswith('oneformer'):
  
+        from vidfeats.semantic_segmentation.oneformer_extractor import extract_oneformer_segmentation
+
         if feature_name.endswith('coco'):
             model_name = 'oneformer_coco_swin_large'
         elif feature_name.endswith('ade'):
