@@ -1,6 +1,9 @@
 addict
 fairscale
+insightface
 huggingface_hub
+onnx
+onnxruntime-gpu
 pycocotools
 PyYAML
 requests
@@ -9,6 +12,3 @@ termcolor
 timm
 transformers
 ultralytics
-onnx
-onnxruntime-gpu
-insightface

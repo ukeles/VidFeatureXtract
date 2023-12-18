@@ -19,7 +19,7 @@ The following features are currently implemented:
 ## Getting Started
 
 ### Installation
-We recommend using Anaconda and setting up a new environment for this repository. This will ensure that the necessary dependencies are installed and managed in a separate environment, without interfering with other Python projects. To use this repo for the extraction of low-level visual features or detecting human faces in video frames, follow the base installation steps. For more advanced functionalities such as human body parts detection and semantic segmentation, please follow the advanced installation section provided below.
+We recommend using Anaconda and setting up a new environment for this repository. This will ensure that the necessary dependencies are installed and managed in a separate environment, without interfering with other Python projects. To use this repository for obtaining basic metadata information from video files or extracting low-level visual features, follow the base installation steps. For more advanced functionalities such as detecting human faces in video frames, human body parts detection, and semantic segmentation, please follow the advanced installation instructions provided below.
 
 #### Base Installation
 - Downlaod and install Anaconda or Miniconda by following the instructions on the [official Anaconda website](https://www.anaconda.com/).
