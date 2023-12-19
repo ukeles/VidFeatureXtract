@@ -52,7 +52,8 @@ conda activate vidfeats_seg
 
 Install python and pip
 ```bash
-conda install -c conda-forge python=3.11 pip setuptools wheel
+# gcc & g++ ≥ 5.4 are required by detectron2
+conda install -c conda-forge python=3.11 pip setuptools wheel gcc gxx
 ```
 
 It is recommended to first install the Cuda Toolkit for optimal compatibility and ease of installation for other libraries that rely on the `CUDA_HOME` environment variable. After installing the Cuda Toolkit, PyTorch should be installed next, followed by any remaining packages, to ensure an efficient and smooth setup.
