@@ -315,7 +315,7 @@ if __name__ == "__main__":
                         help='Whether to save the visualization of detections for semantic feature options')
     parser.add_argument('--thresh', type=float,
                         help='The threshold for detection confidence for semantic feature options')
-    parser.add_argument('--modelzoo', type=float,
+    parser.add_argument('--modelzoo', type=str,
                         help='The path to pre-trained model weights')
     parser.add_argument('--extraction_fps', type=float,
                         help='The frame rate to sample the video for feature extraction.')
