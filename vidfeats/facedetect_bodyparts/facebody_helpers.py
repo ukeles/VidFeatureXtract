@@ -336,9 +336,13 @@ class YOLOv8_face:
         outputs = self.net.forward(self.net.getUnconnectedOutLayersNames())
         det_bboxes, det_conf, det_classid, landmarks = self.post_process(outputs, scale_h, scale_w, padh, padw)
         
-        landmarks_inds = np.asarray([0, 1, 3, 4, 6, 7, 9, 10, 12, 13])
-        landmarks = landmarks[:,landmarks_inds]
-        return det_bboxes, det_conf[:,None], det_classid, landmarks
+        if len(det_bboxes):
+            landmarks_inds = np.asarray([0, 1, 3, 4, 6, 7, 9, 10, 12, 13])
+            landmarks = landmarks[:,landmarks_inds]
+            return det_bboxes, det_conf[:,None], det_classid, landmarks
+        else:
+            return np.array([]), np.array([]), np.array([]), np.array([])
+
 
     def post_process(self, preds, scale_h, scale_w, padh, padw):
         bboxes, scores, landmarks = [], [], []
@@ -379,16 +383,17 @@ class YOLOv8_face:
         classIds = np.argmax(scores, axis=1)
         confidences = np.max(scores, axis=1)  ####max_class_confidence
         
-        mask = confidences>self.conf_threshold
+        mask = confidences > self.conf_threshold
         bboxes_xy = bboxes[mask]
         bboxes_wh = bboxes_wh[mask]
         confidences = confidences[mask]
         classIds = classIds[mask]
         landmarks = landmarks[mask]
         
-        indices = cv2.dnn.NMSBoxes(bboxes_wh.tolist(), confidences.tolist(), self.conf_threshold,
+        if len(confidences) > 0:
+            indices = cv2.dnn.NMSBoxes(bboxes_wh.tolist(), confidences.tolist(), self.conf_threshold,
                                    self.iou_threshold).flatten()
-        if len(indices) > 0:
+
             mlvl_bboxes = bboxes_xy[indices]
             # mlvl_bboxes = bboxes_wh[indices]
             confidences = confidences[indices]
@@ -396,7 +401,6 @@ class YOLOv8_face:
             landmarks = landmarks[indices]
             return mlvl_bboxes, confidences, classIds, landmarks
         else:
-            print('nothing detect')
             return np.array([]), np.array([]), np.array([]), np.array([])
 
     def distance2bbox(self, points, distance, max_shape=None):

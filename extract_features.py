@@ -102,6 +102,7 @@ def run_feature_extraction(inputs):
 
     # Save presentation time stamp (PTS) values to be used with extracted features 
     if feature_name in features_extract:
+        os.makedirs(output_dir, exist_ok=True)
         np.save(os.path.join(output_dir,f'{vr.basename}_frame_pts.npy'), vr.pts)
         
         if vr.extraction_pts is not None:

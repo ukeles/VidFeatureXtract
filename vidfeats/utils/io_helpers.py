@@ -107,7 +107,7 @@ def finalize_and_save(output_vid_file, outfile_pkl, feats_dict,
     with open(outfile_pkl, 'wb') as pfile:
         pickle.dump(feats_dict, pfile)
     
-    if outfile_arr and feats_arr:
+    if outfile_arr is not None and feats_arr is not None:
         np.save(outfile_arr, feats_arr)
         
 

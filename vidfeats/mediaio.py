@@ -249,10 +249,7 @@ class Video:
         if self._frame_count_timed != self.frame_count:
             print("The number of frames obtained from metadata and manual counting are different!\n"+
                   f"difference (Indexed-Timed): {self.frame_count-self._frame_count_timed} "+
-                  "\n--might need to confirm the actual number from the experiment log files. "+
-                  "This might be because the video has varying frame rates throughout its duration, "+
-                  " i.e., variable frame rate.\n"+
-                  f"This code will take the frame count as {self.frame_count}.")
+                  f"\nThis code takes the frame count as {self.frame_count}.")
 
     def __getitem__(self, indx):
         """

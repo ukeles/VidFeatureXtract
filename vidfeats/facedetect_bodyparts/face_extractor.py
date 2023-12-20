@@ -186,11 +186,12 @@ def extract_faces_yolov8face(vr, output_dir, overwrite_ok=False, saveviz=True, d
 
         result = results[0]
         box_data = result.boxes.data.cpu().numpy()
-        keyp_xy_3d = result.keypoints.xy.cpu().numpy()
-        keyp_xy = keyp_xy_3d.reshape(*keyp_xy_3d.shape[:-2], -1)
-        dets = np.hstack((box_data[:,:-1], keyp_xy))
 
-        if len(dets) > 0: # at least one face detected
+        if len(box_data) > 0: # at least one face detected
+            keyp_xy_3d = result.keypoints.xy.cpu().numpy()
+            keyp_xy = keyp_xy_3d.reshape(*keyp_xy_3d.shape[:-2], -1)
+            dets = np.hstack((box_data[:,:-1], keyp_xy))
+            
             feats_data[f'frame_{fii+1}'] = dets
             face_areas_nums, _ = get_faceareas_simple(dets, frame_height, frame_width,
                                                       detection_thrs=det_thresh)
@@ -203,7 +204,7 @@ def extract_faces_yolov8face(vr, output_dir, overwrite_ok=False, saveviz=True, d
         
         # Visualization part
         if saveviz:
-            if len(dets) > 0: # at least one face detected
+            if len(box_data) > 0: # at least one face detected
                 visualize_facedetections(img, face_boxes, face_boxes_eyes, face_boxes_mouth)
             
             output_vid_file.write(img)
@@ -277,9 +278,9 @@ def extract_faces_yolov8face_cv(vr, output_dir, overwrite_ok=False, saveviz=True
         img = cv2.cvtColor(frame_ii, cv2.COLOR_RGB2BGR)
         
         boxes, scores, classids, kpts = face_detector.detect(img)
-        dets = np.hstack((boxes,scores,kpts))
         
-        if len(dets) > 0: # at least one face detected
+        if len(boxes) > 0: # at least one face detected
+            dets = np.hstack((boxes,scores,kpts))
             feats_data[f'frame_{fii+1}'] = dets
             face_areas_nums, _ = get_faceareas_simple(dets, frame_height, frame_width,
                                                       detection_thrs=det_thresh)
@@ -292,7 +293,7 @@ def extract_faces_yolov8face_cv(vr, output_dir, overwrite_ok=False, saveviz=True
         
         # Visualization part
         if saveviz:
-            if len(dets) > 0: # at least one face detected
+            if len(boxes) > 0: # at least one face detected
                 visualize_facedetections(img, face_boxes, face_boxes_eyes, face_boxes_mouth)
             
             output_vid_file.write(img)
