@@ -264,7 +264,7 @@ def main(args):
         raise SystemExit('Please provide a valid video file or video directory path.')
         
     for video_path in videos_to_process:
-        print(f'Processing video: {video_path}')
+        print(f'\nProcessing video: {video_path}')
 
         # Convert args to a dictionary, e.g., inputs['nbatches'], and update the 'video' entry
         inputs = vars(args)

@@ -248,7 +248,7 @@ class Video:
         # Warning if frame counts from different methods don't match
         if self._frame_count_timed != self.frame_count:
             print("The number of frames obtained from metadata and manual counting are different!\n"+
-                  f"difference (Indexed-Timed): {self.frame_count-self._frame_count_timed} "+
+                  f"> Difference (Indexed - Timed) [{self.frame_count} - {self._frame_count_timed}]: {self.frame_count-self._frame_count_timed} "+
                   f"\nThis code takes the frame count as {self.frame_count}.")
 
     def __getitem__(self, indx):
