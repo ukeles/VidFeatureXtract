@@ -105,13 +105,15 @@ def extract_bodyparts_densepose(vr, output_dir, modelzoo_dir, overwrite_ok=False
     check_outputfile(outfile_pkl, overwrite_ok)
     
     # ------- Densepose settings: -------
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    
     # Download pre-trained models from:
     # https://github.com/facebookresearch/detectron2/blob/main/projects/DensePose/doc/DENSEPOSE_IUV.md#ModelZoo
     # Original from Guler et al. 2018
-    config_fpath = os.path.join(modelzoo_dir,'densepose_rcnn_R_101_FPN_s1x_legacy.yaml')
-    model_fpath  = os.path.join(modelzoo_dir,'model_final_ad63b5.pkl')
+    config_fpath = os.path.join(curr_dir,'densepose_yaml','densepose_rcnn_R_101_FPN_s1x_legacy.yaml')
+    model_fpath  = os.path.join(modelzoo_dir,'model_final_10af0e.pkl')
 
-    # config_fpath = os.path.join(modelzoo_dir,'densepose_rcnn_R_101_FPN_DL_s1x.yaml')
+    # config_fpath = os.path.join(curr_dir,'densepose_yaml','densepose_rcnn_R_101_FPN_DL_s1x.yaml')
     # model_fpath  = os.path.join(modelzoo_dir,'model_final_844d15.pkl')
 
     cfg = get_cfg()
