@@ -132,7 +132,7 @@ def array2str_encoder(arr_in):
     """
     # Ensure that converting the array to uint8 is a safe operation.
     assert arr_in.max() < np.iinfo(np.uint8).max
-    assert arr_in.min() <= np.iinfo(np.uint8).min
+    assert arr_in.min() >= np.iinfo(np.uint8).min
     
     # Convert the array to uint8, a standard format for images
     img_dum = arr_in.astype(np.uint8)
