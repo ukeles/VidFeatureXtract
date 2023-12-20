@@ -67,7 +67,8 @@ def visualize_segments(img_rgb, sem_seg, categs_all, alpha=0.6):
     np.ndarray
         The BGR image with semantic segmentation visualization.
     """
-    
+    categs_all = np.array(categs_all)
+
     # Sort labels by their area (largest first)
     labels, areas = np.unique(sem_seg, return_counts=True)
     sorted_idxs = np.argsort(-areas)

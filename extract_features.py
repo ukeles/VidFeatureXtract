@@ -226,10 +226,13 @@ def run_feature_extraction(inputs):
             model_name = 'oneformer_coco_swin_large'
         elif feature_name.endswith('ade'):
             model_name = 'oneformer_ade20k_swin_large'
+
+        frame_height_org = inputs.get('frame_height_org', None)
         
         print(f'\nExtracting {feature_name} [semantic segmentation] features...\n')
         extract_oneformer_segmentation(vr, output_dir=output_dir, model_name=model_name,
-                                       overwrite_ok=overwrite_ok, saveviz=saveviz)
+                                       overwrite_ok=overwrite_ok, saveviz=saveviz,
+                                       frame_height_org=frame_height_org)
 
 
     # More feature extraction methods can be added here.
@@ -319,6 +322,8 @@ if __name__ == "__main__":
                         help='The path to pre-trained model weights')
     parser.add_argument('--extraction_fps', type=float,
                         help='The frame rate to sample the video for feature extraction.')
+    parser.add_argument('--frame_height_org', type=int,
+                        help='Originial frane height for a padded video.')
     
     # Parse command-line arguments
     args = parser.parse_args()

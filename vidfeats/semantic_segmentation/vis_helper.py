@@ -230,6 +230,8 @@ class Visualizer:
         Returns:
             output (VisImage): image object with visualizations.
         """
+        categs_all = np.array(categs_all)
+        
         labels, areas = np.unique(sem_seg, return_counts=True)
         sorted_idxs = np.argsort(-areas).tolist()
         labels = labels[sorted_idxs]
