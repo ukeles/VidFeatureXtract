@@ -338,10 +338,10 @@ if __name__ == "__main__":
                         help='The threshold for detection confidence for semantic feature options')
     parser.add_argument('--modelzoo', type=str,
                         help='The path to pre-trained model weights')
-    parser.add_argument('--extraction_fps', type=float,
-                        help='The frame rate to sample the video for feature extraction.')
+    parser.add_argument('--extraction_fps', type=int,
+                        help='The new frame rate to sample the video for feature extraction.')
     parser.add_argument('--frame_height_org', type=int,
-                        help='Originial frane height for a padded video.')
+                        help='Originial frame height for a padded video.')
     
     # Parse command-line arguments
     args = parser.parse_args()
