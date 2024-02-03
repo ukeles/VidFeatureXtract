@@ -95,12 +95,8 @@ def run_feature_extraction(inputs):
     if inputs.get('extraction_fps', None) is not None:
         extraction_fps = inputs['extraction_fps'] # desired frame rate for extraction
 
-        fps_splits_arr = vr.fps_resample_basic(extraction_fps)
+        _ = vr.fps_resample_basic(extraction_fps)
         
-        vr.extraction_fps = extraction_fps
-        vr.extraction_frames = fps_splits_arr[:,1]
-        vr.extraction_pts = fps_splits_arr[:,2]
-    
 
     # Save presentation time stamp (PTS) values to be used with extracted features 
     if feature_name in features_extract:
