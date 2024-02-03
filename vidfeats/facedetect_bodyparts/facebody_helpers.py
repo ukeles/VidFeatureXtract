@@ -9,7 +9,7 @@ Some helper functions for face and bodypart detection pipelines.
 import cv2
 import numpy as np
 
-# ----- utils for face detection -----
+# utils for face detection
 def faces2dets(faces):
     """
     Convert face detections into a formatted array.

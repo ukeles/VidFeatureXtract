@@ -8,6 +8,8 @@ Common io helper functions
 
 import os
 import argparse
+import pickle
+
 
 def str2bool(arg_in):
     """
@@ -36,7 +38,6 @@ def str2bool(arg_in):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean [True or False] value expected.')
-
 
 
 def check_outputfile(output_file, overwrite_ok):
@@ -103,7 +104,6 @@ def finalize_and_save(output_vid_file, outfile_pkl, feats_dict,
     if output_vid_file:
         output_vid_file.release()
 
-    import pickle
     with open(outfile_pkl, 'wb') as pfile:
         pickle.dump(feats_dict, pfile)
     

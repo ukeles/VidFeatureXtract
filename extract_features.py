@@ -8,15 +8,15 @@
 import os
 import argparse
 import numpy as np
+import json
 
 from vidfeats.mediaio import Video
 from vidfeats.utils.io_helpers import str2bool
 
 from vidfeats.basic_visual_features.bvisual_extractor import extract_colors, extract_gist, extract_moten
 
-
 # List of available features for extraction
-features_base = ['getinfo', 'count_frames']
+features_base = ['getinfo', 'count_frames', 'saveinfo']
 features_extract = ['colors', 'gist', 'moten', 'face_insg', 'face_yolov8face',
                     'face_yolov8face_cv', 'densepose', 'oneformer_ade', 'oneformer_coco']
 features_list = features_base + features_extract
@@ -80,6 +80,13 @@ def run_feature_extraction(inputs):
     if feature_name == 'getinfo':
         return
 
+    if feature_name == 'saveinfo':
+        vid_info = {'duration': vr.duration, 
+                    'nframes':vr.frame_count, 'fps':vr.fps, 
+                    'frame_width':vr.width, 'frame_height':vr.height }
+        return vid_info
+
+
     # Return after examining number of frames in the video
     if feature_name == 'count_frames':
         vr.examine_nframes()
@@ -88,16 +95,11 @@ def run_feature_extraction(inputs):
     if inputs.get('extraction_fps', None) is not None:
         extraction_fps = inputs['extraction_fps'] # desired frame rate for extraction
 
-        nframes = vr.frame_count  # Number of frames in the video.
-        vid_fps = vr.fps # Frames per second of the video.
-        vr_pts = vr.pts
-        
-        extract_interval = np.round(vid_fps / extraction_fps)
-        extract_frames = np.arange(0, nframes, extract_interval, dtype=int)
+        fps_splits_arr = vr.fps_resample_basic(extraction_fps)
         
         vr.extraction_fps = extraction_fps
-        vr.extraction_frames = extract_frames
-        vr.extraction_pts = vr_pts[extract_frames]
+        vr.extraction_frames = fps_splits_arr[:,1]
+        vr.extraction_pts = fps_splits_arr[:,2]
     
 
     # Save presentation time stamp (PTS) values to be used with extracted features 
@@ -262,10 +264,15 @@ def main(args):
             if filename.lower().endswith(('.mp4', '.avi', '.mov')):
                 videos_to_process.append(os.path.join(args.video_dir, filename))
     
+        json_file = os.path.join(args.video_dir,'vidsinfo.json')
+
     # Raise an error if neither a valid file nor directory is provided
     else:
         raise SystemExit('Please provide a valid video file or video directory path.')
         
+
+        
+    video_info = {}
     for video_path in videos_to_process:
         print(f'\nProcessing video: {video_path}')
 
@@ -277,8 +284,19 @@ def main(args):
         inputs = {k: v for k, v in inputs.items() if v is not None}
 
         # Call the feature extraction function
-        run_feature_extraction(inputs)
+        if inputs['feature'] == 'saveinfo':
+            vid_info = run_feature_extraction(inputs)
+            vid_ii = os.path.basename(video_path)
+            video_info[vid_ii] = vid_info
+        else:
+            run_feature_extraction(inputs)
 
+
+    if inputs['feature'] == 'saveinfo':
+        # save values to have a quick access for later use
+        with open(json_file, 'w') as fp:
+            json.dump(video_info, fp, indent=True)
+    
 
 if __name__ == "__main__":
     

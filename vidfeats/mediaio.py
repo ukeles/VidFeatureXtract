@@ -151,6 +151,29 @@ def get_pts_mediaplayer(video_file, fps):
 
 
 
+def select_indices_centered(k, n):
+    """
+    Select 'k' evenly spaced indices from a sequence of length 'n'.
+    Adds an offset to make the selection more centered within each interval.
+    
+    Parameters
+    ----------
+    k : int
+        The number of elements to select.
+    n : int
+        The length of the sequence from which elements are to be selected.
+
+    Returns
+    -------
+    list of int
+        A list of 'k' indices
+    """
+    assert k>0 and n>0
+    
+    return [ int(ii * n / k) + int(n / (2 * k)) for ii in range(k) ]
+    # return [ ii * n // k + n // (2 * k) for ii in range(k) ]
+
+
 video_readers = ['pims_av']
 
 class Video:
@@ -187,6 +210,7 @@ class Video:
             {video_readers} """
             
         self.get_metadata()
+
 
     def get_metadata(self):
         """
@@ -251,6 +275,7 @@ class Video:
                   f"> Difference (Indexed - Timed) [{self.frame_count} - {self._frame_count_timed}]: {self.frame_count-self._frame_count_timed} "+
                   f"\nThis code takes the frame count as {self.frame_count}.")
 
+
     def __getitem__(self, indx):
         """
         Returns a single video frame or a sequence of frames from 
@@ -260,6 +285,7 @@ class Video:
             return self.obj[indx]
         # [More conditions for different types of video readers can be added here]
 
+
     def get_frame(self, indx):
         """
         Returns a single frame from the video object at the given index.
@@ -267,6 +293,49 @@ class Video:
         if self.reader == 'pims_av':
             return self.obj[indx]
         # [Other readers can be implemented here]
+        
+        
+    def fps_resample_basic(self, extraction_fps):
+        """
+        Get video frames at a rate of 'extraction_fps' 
+        
+        Parameters:
+        -----------
+        extraction_fps: int
+            desired frame rate for extraction
+
+        Returns
+        -------
+        fps_splits_down: np.dnarray
+            1st column: dummy chunk indicies, can be used to re-split the array,
+            2nd column: resampled frame numbers, refering to the original frame numbers,
+            3rd column: resampled PTS values.  
+        """
+        
+        nframes = self.frame_count  # Number of frames in the video.
+        vr_pts = self.pts
+        
+        chunks = ( vr_pts / 1. ).astype(int) + 1 # "/ 1." is for an initial splitting into 1 sec blocks
+        fps_dum = np.c_[ chunks, np.arange(nframes), vr_pts ]
+        fps_splits = np.split(fps_dum, np.where(np.diff(chunks))[0]+1)
+        
+        fps_splits_down = []
+        for sp_cnt, sp_ii in enumerate(fps_splits):
+            
+            if extraction_fps < len(sp_ii):
+                use_inds = select_indices_centered( extraction_fps, len(sp_ii) )
+                fps_splits_down.append( sp_ii[use_inds] )
+            else:
+                fps_splits_down.append( sp_ii )       
+
+        fps_splits_stack = np.vstack(fps_splits_down)
+        
+        self.extraction_fps = extraction_fps
+        self.extraction_frames = fps_splits_stack[:, 1].astype(int)
+        self.extraction_pts = fps_splits_stack[:, 2]
+        
+        return fps_splits_down
+
 
     def examine_nframes(self):
         """
@@ -342,5 +411,4 @@ class Video:
 
         except ModuleNotFoundError:
             print('mmcv module is not installed!')
-
 
