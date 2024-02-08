@@ -218,6 +218,73 @@ def get_faceareas(this_frame_results, frame_height, frame_width, detection_thrs=
         return face_areas, face_areas_eyes, face_areas_mouth, face_boxes, face_boxes_eyes, face_boxes_mouth
 
 
+
+
+
+def get_faceareas_one(this_frame_results, frame_height, frame_width, detection_thrs=0.5):
+    """
+    
+    Parameters
+    ----------
+    this_frame_results : array-like
+        2D array where each row contains bounding box coordinates, detection score, and facial landmarks.
+        Expected columns are:
+        x1, y1, x2, y2 (bounding box), detection score, and x, y coordinates for five facial landmarks.
+    frame_height : int
+        Height of the frame.
+    frame_width : int
+        Width of the frame.
+    detection_thrs : float, optional
+        Detection threshold for face detection. Faces with a score below this value will be ignored.
+        Default is 0.5.
+        
+    Returns
+    -------
+    face_areas: np.ndarray
+        An array where 1: indicates the eye region, 2: the mouth region, 
+                       3: other facial regions, 0: non-face regions.
+    """
+    
+    # Initializing binary masks
+    face_areas = np.zeros((frame_height, frame_width), dtype=np.uint8)
+
+    for hii in this_frame_results:
+        if hii[4] > detection_thrs:
+            # Bounding the coordinates within the frame dimensions.
+            # this line ensures that all x-coordinates are within [0, frame_width - 1], 
+            # all y-coordinates are within [0, frame_height - 1], and the detection score is above 0--trivial.
+            b = np.clip(hii.astype(int), 0, 
+                        [frame_width-1, frame_height-1, frame_width-1, frame_height-1, np.inf] +\
+                        [frame_width-1, frame_height-1] * 5).astype(int)
+            
+            # Updating the face region mask
+            face_areas[b[1]:b[3]+1, b[0]:b[2]+1] = 3
+               
+            landmarks = b[5:].reshape(-1, 2)
+
+            # Computing a combined bounding box using both the detected face and landmark positions
+            box2 = [np.min(landmarks[:, 0]), np.min(landmarks[:, 1]), np.max(landmarks[:, 0]), np.max(landmarks[:, 1])]
+            med_box = np.vstack((b[:4], box2)).mean(0).astype(int).reshape(-1, 2)
+
+            # Control for out of frame detections.
+            med_box = np.clip(med_box, [0, 0], [frame_width - 1, frame_height - 1])
+            med_box = med_box.flatten()
+
+            # Computing regions for eyes and mouth based on the combined bounding box and nose position
+            box_11 = [np.min([med_box[0], med_box[2], landmarks[2, 0]]), np.min([med_box[1], landmarks[2, 1]]),
+                      np.max([med_box[0], med_box[2], landmarks[2, 0]]), np.max([med_box[1], landmarks[2, 1]])]
+            
+            box_22 = [np.min([med_box[0], med_box[2], landmarks[2, 0]]), np.min([med_box[3], landmarks[2, 1]]),
+                      np.max([med_box[0], med_box[2], landmarks[2, 0]]), np.max([med_box[3], landmarks[2, 1]])]
+
+
+            face_areas[box_22[1]:box_22[3]+1, box_22[0]:box_22[2]+1] = 2
+            face_areas[box_11[1]:box_11[3]+1, box_11[0]:box_11[2]+1] = 1
+
+    return face_areas
+
+
+
 def visualize_facedetections(img, face_boxes, face_boxes_eyes, face_boxes_mouth):
     """
     Helper function to visualize face detections on a single frame.
