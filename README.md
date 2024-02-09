@@ -38,7 +38,7 @@ We recommend using Anaconda and setting up a new environment for this repository
 - Activate the environment and install this repository in editable mode using pip:
   ```bash
   conda activate vidfeats_base
-  pip install -e .
+  python -m pip install -e .
   ```
 This repository is currently in development. We recommend periodically running the `git pull` command to ensure your local copy stays updated with the latest changes.
 

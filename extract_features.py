@@ -80,10 +80,11 @@ def run_feature_extraction(inputs):
     if feature_name == 'getinfo':
         return
 
+
+    vid_info = {'duration': vr.duration, 
+                'nframes': vr.frame_count, 'fps': vr.fps, 
+                'frame_width': vr.width, 'frame_height': vr.height }
     if feature_name == 'saveinfo':
-        vid_info = {'duration': vr.duration, 
-                    'nframes':vr.frame_count, 'fps':vr.fps, 
-                    'frame_width':vr.width, 'frame_height':vr.height }
         return vid_info
 
 
@@ -91,20 +92,25 @@ def run_feature_extraction(inputs):
     if feature_name == 'count_frames':
         vr.examine_nframes()
         return
+
     
     if inputs.get('extraction_fps', None) is not None:
         extraction_fps = inputs['extraction_fps'] # desired frame rate for extraction
-
         _ = vr.fps_resample_basic(extraction_fps)
         
 
     # Save presentation time stamp (PTS) values to be used with extracted features 
     if feature_name in features_extract:
         os.makedirs(output_dir, exist_ok=True)
-        np.save(os.path.join(output_dir,f'{vr.basename}_frame_pts.npy'), vr.pts)
+        np.save(os.path.join(output_dir, f'{vr.basename}_frame_pts.npy'), vr.pts)
+        
+        # save video meta info to have a reference of values used during feature extraction
+        vid_json_file = os.path.join(output_dir, f'{vr.basename}_vidinfo.json')
+        with open(vid_json_file, 'w') as vfp:
+            json.dump(vid_info, vfp, indent=True)
         
         if vr.extraction_pts is not None:
-            np.save(os.path.join(output_dir,f'{vr.basename}_extractionfps_{vr.extraction_fps}_pts.npy'), 
+            np.save(os.path.join(output_dir, f'{vr.basename}_extractionfps_{vr.extraction_fps}_pts.npy'), 
                     np.c_[vr.extraction_frames, vr.extraction_pts] )
 
 
@@ -344,5 +350,4 @@ if __name__ == "__main__":
 
     # Run the main function
     main(args)
-
 
