@@ -258,6 +258,11 @@ def main(args):
     # Check if a single video file is provided
     if args.video and os.path.isfile(args.video):
         videos_to_process.append(args.video)
+        
+        vid_dir = os.path.dirname(args.video)
+        vid_name = os.path.splitext(os.path.basename(args.video))[0]
+        json_file = os.path.join(vid_dir, f'{vid_name}_vidinfo.json')
+        
     
     # Check if a directory is provided
     elif args.video_dir and os.path.isdir(args.video_dir):

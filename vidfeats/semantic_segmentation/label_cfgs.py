@@ -7,7 +7,7 @@ ADE150_CATEGORIES = [
     {"color": [120, 120, 80], "id": 5, "isthing": 0, "name": "ceiling"},
     {"color": [140, 140, 140], "id": 6, "isthing": 0, "name": "road, route"},
     {"color": [204, 5, 255], "id": 7, "isthing": 1, "name": "bed"},
-    {"color": [230, 230, 230], "id": 8, "isthing": 1, "name": "window "},
+    {"color": [230, 230, 230], "id": 8, "isthing": 1, "name": "window"},
     {"color": [4, 250, 7], "id": 9, "isthing": 0, "name": "grass"},
     {"color": [224, 5, 255], "id": 10, "isthing": 1, "name": "cabinet"},
     {"color": [235, 255, 7], "id": 11, "isthing": 0, "name": "sidewalk, pavement"},

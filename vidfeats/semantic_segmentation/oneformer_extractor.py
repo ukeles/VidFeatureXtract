@@ -50,11 +50,13 @@ def extract_oneformer_segmentation(vr, output_dir, model_name='oneformer_coco_sw
 
     
     if 'coco' in model_name:
-        from .label_cfgs import COCO133_CATEGORIES as categs_all
+        from .label_cfgs import COCO133_CATEGORIES
+        categs_all = COCO133_CATEGORIES.copy()
         file_ext = 'coco'
         
     elif 'ade20k' in model_name:
-        from .label_cfgs import ADE150_CATEGORIES as categs_all
+        from .label_cfgs import ADE150_CATEGORIES
+        categs_all = ADE150_CATEGORIES.copy()
         file_ext = 'ade'
         
 
