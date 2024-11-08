@@ -84,7 +84,10 @@ def run_feature_extraction(inputs):
     vid_info = {'duration': vr.duration, 
                 'nframes': vr.frame_count, 'fps': vr.fps, 
                 'frame_width': vr.width, 'frame_height': vr.height }
+    
     if feature_name == 'saveinfo':
+        pts_fname = os.path.splitext(vr.file)[0] + '_pts.npy'
+        np.save(pts_fname, vr.pts)
         return vid_info
 
 

@@ -36,6 +36,8 @@ def get_pts_av(video_file, fps):
         ffpyplayer.player.MediaPlayer, I decided to use the dts as pts for this problematic case.
         In general, if the video file does not have any such issues, pts and dts values are equal.
     """
+    print('Retrieving the presentation timestamps (PTS)...', flush=True)
+
     with av.open(video_file) as container:
         # note that this assumption was used in PyAVReaderIndexed() too.
         stream = container.streams.video[0] 
@@ -112,7 +114,9 @@ def get_pts_mediaplayer(video_file, fps):
     # MediaPlayer options
     ff_opts = {
         'out_fmt': 'rgb24',
+        'fast': True,
         'an': True,  # Ignore audio stream
+        'framedrop': False, # Must be enabled to process all frames
         'sync': 'video'
     }
 
@@ -188,7 +192,7 @@ class Video:
         
     """
 
-    def __init__(self, file, reader='pims_av'):
+    def __init__(self, file, reader='pims_av', quick_info=False):
         """
         Initializes the Video class.
         
@@ -204,6 +208,7 @@ class Video:
         self.file = file
         self.basefile = os.path.basename(file)
         self.basename = os.path.splitext(self.basefile)[0]
+        self.quick_info = quick_info
         
         self.reader = reader
         assert reader in video_readers, f"""reader={reader} is not implemented. Options are:
@@ -234,8 +239,11 @@ class Video:
             self.height = vr.frame_shape[0]
             self.resolution = (self.width, self.height)
             
+            if self.quick_info:
+                return 
+            
             # Second load to get more accurate frame count of the video
-            print('Counting frames with pims.PyAVReaderIndexed()...')
+            print('Counting frames with pims.PyAVReaderIndexed()...', flush=True)
             vr = PyAVReaderIndexed(self.file)
             self.frame_count = len(vr)
             self.obj = vr
