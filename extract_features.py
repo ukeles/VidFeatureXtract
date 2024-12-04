@@ -280,7 +280,8 @@ def main(args):
     else:
         raise SystemExit('Please provide a valid video file or video directory path.')
         
-
+    if len(videos_to_process) == 0:
+        raise SystemExit('Please provide a valid video file or video directory path.')
         
     video_info = {}
     for video_path in videos_to_process:

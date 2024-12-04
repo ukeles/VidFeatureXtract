@@ -238,8 +238,14 @@ class Video:
             self.width = vr.frame_shape[1]
             self.height = vr.frame_shape[0]
             self.resolution = (self.width, self.height)
+            self.pts_quick = None
             
             if self.quick_info:
+                
+                pts_fname = os.path.splitext(self.file)[0] + '_pts.npy'
+                if os.path.isfile(pts_fname):
+                    self.pts_quick = np.load(pts_fname)
+                    
                 return 
             
             # Second load to get more accurate frame count of the video

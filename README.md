@@ -137,6 +137,8 @@ To obtain basic information about the video such as resolution, frame count, and
 python extract_features.py --feature getinfo -v [VIDEO_PATH]
 # or for all video files in a directory
 python extract_features.py --feature getinfo -d [VIDEOS_DIR]
+# or use `saveinfo` to save meta and PTS information for a later quick access
+python extract_features.py --feature saveinfo -d [VIDEOS_DIR]
 ```
 For example:
 ```bash
