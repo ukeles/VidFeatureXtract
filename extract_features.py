@@ -6,6 +6,7 @@
 
 
 import os
+import sys
 import argparse
 import numpy as np
 import json
@@ -187,6 +188,7 @@ def run_feature_extraction(inputs):
     # ----- Detect faces and extract some face-related features using YOLOv8 and openCV -----
     # Ref: https://github.com/derronqi/yolov8-face
     #      https://github.com/hpc203/yolov8-face-landmarks-opencv-dnn
+    # This is the slowest of these three face detection options.
     elif feature_name == 'face_yolov8face_cv':
         
         from vidfeats.facedetect_bodyparts.face_extractor import extract_faces_yolov8face_cv
@@ -260,19 +262,33 @@ def main(args):
 
     # Check if a single video file is provided
     if args.video and os.path.isfile(args.video):
-        videos_to_process.append(args.video)
-        
-        vid_dir = os.path.dirname(args.video)
-        vid_name = os.path.splitext(os.path.basename(args.video))[0]
-        json_file = os.path.join(vid_dir, f'{vid_name}_vidinfo.json')
-        
-    
+        if os.access(args.video, os.R_OK):
+            videos_to_process.append(args.video)
+
+            vid_dir  = os.path.dirname(args.video)
+            vid_name = os.path.splitext(os.path.basename(args.video))[0]
+            json_file = os.path.join(vid_dir, f"{vid_name}_vidinfo.json")
+        else:
+            raise SystemExit(f"Cannot read {args.video!r} -- check file permission!", file=sys.stderr)
+
     # Check if a directory is provided
     elif args.video_dir and os.path.isdir(args.video_dir):
         # Iterate over all files in the directory and add video files to the list
         for filename in sorted(os.listdir(args.video_dir)):
-            if filename.lower().endswith(('.mp4', '.avi', '.mov')):
-                videos_to_process.append(os.path.join(args.video_dir, filename))
+            if filename.startswith('.'):              # ignore hidden files
+                continue
+
+            vid_path = os.path.join(args.video_dir, filename)
+
+            if not (os.path.isfile(vid_path)
+                    and filename.lower().endswith(('.mp4', '.avi', '.mov'))):
+                continue                              # not a video file we care about
+
+            if not os.access(vid_path, os.R_OK):          # permission check
+                print(f"Cannot read {vid_path!r} - skipping.", file=sys.stderr)
+                continue
+
+            videos_to_process.append(vid_path)
     
         json_file = os.path.join(args.video_dir,'vidsinfo.json')
 
