@@ -275,7 +275,8 @@ def main(args):
     elif args.video_dir and os.path.isdir(args.video_dir):
         # Iterate over all files in the directory and add video files to the list
         for filename in sorted(os.listdir(args.video_dir)):
-            if filename.startswith('.'):              # ignore hidden files
+            # if filename.startswith('.'):              # ignore hidden files
+            if filename.startswith('.') or 'soundcheck' in filename.lower():
                 continue
 
             vid_path = os.path.join(args.video_dir, filename)
