@@ -124,7 +124,7 @@ def extract_oneformer_segmentation(vr, output_dir, model_name='oneformer_coco_sw
                 inputs = processor(frame_jj, task_inputs=["semantic"], return_tensors="pt")
         
             # bactching does not improve speed. 
-            with torch.no_grad():
+            with torch.no_grad(): # TODO; take this outside the for loop.
                 outputs = model(**inputs)
 
             if frame_height_org is None:

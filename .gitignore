@@ -29,6 +29,7 @@ MANIFEST
 # specific settings
 mweights/densepose/
 extracted_features/
+README_local.txt
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

@@ -14,12 +14,11 @@ import json
 from vidfeats.mediaio import Video
 from vidfeats.utils.io_helpers import str2bool
 
-from vidfeats.basic_visual_features.bvisual_extractor import extract_colors, extract_gist, extract_moten
-
 # List of available features for extraction
 features_base = ['getinfo', 'count_frames', 'saveinfo']
 features_extract = ['colors', 'gist', 'moten', 'face_insg', 'face_yolov8face',
-                    'face_yolov8face_cv', 'densepose', 'oneformer_ade', 'oneformer_coco']
+                    'face_yolov8face_cv', 'densepose', 'oneformer_ade', 'oneformer_coco', 
+                    'clip', 'pe_core']
 features_list = features_base + features_extract
 
 
@@ -120,6 +119,9 @@ def run_feature_extraction(inputs):
 
     # ----- Extract RGB-HSV-Luminance features from the video -----
     if feature_name == 'colors':
+
+        from vidfeats.basic_visual_features.bvisual_extractor import extract_colors
+        
         print(f'\nExtracting {feature_name} [RGB-HSV-Luminance] features...\n')
         extract_colors(vr, output_dir=output_dir, overwrite_ok=overwrite_ok)
 
@@ -132,6 +134,9 @@ def run_feature_extraction(inputs):
     # 1. https://people.csail.mit.edu/torralba/code/spatialenvelope/
     # 2. https://doi.org/10.1016/S0079-6123(06)55002-2
     elif feature_name == 'gist':
+        
+        from vidfeats.basic_visual_features.bvisual_extractor import extract_gist
+        
         print(f'\nExtracting {feature_name} features...\n')
         # Define parameters for the GIST extraction:
         # `image_size` determines the size of the image (width x height)
@@ -153,6 +158,9 @@ def run_feature_extraction(inputs):
     # 1. GitHub repository: https://github.com/gallantlab/pymoten
     # 2. Official documentation: https://gallantlab.org/pymoten/
     elif feature_name == 'moten':
+        
+        from vidfeats.basic_visual_features.bvisual_extractor import extract_moten
+        
         print(f'\nExtracting {feature_name} [Gabor motion-energy] features...\n')
         # Define parameters for Motion Energy extraction:
         # `image_size`: Size of the image (width x height).
@@ -244,6 +252,48 @@ def run_feature_extraction(inputs):
                                        frame_height_org=frame_height_org)
 
 
+    elif feature_name == 'clip':
+        
+        modelzoo_dir = inputs.get('modelzoo', None)
+        if modelzoo_dir is not None:
+            # should be called before `transformers`
+            os.environ['HF_HOME'] = modelzoo_dir
+        
+        from vidfeats.clip_features.clip_extractor import extract_clip_features
+        
+        # arch, pretrained = ("ViT-B-16", "laion2b_s34b_b88k") # small model
+
+        params = {
+            'arch': inputs.get('arch', "ViT-B-16"),
+            'pretrained': inputs.get('pretrained', "laion2b_s34b_b88k"),
+            'device': inputs.get('device', None),
+            'image_resize_mode': inputs.get('image_resize_mode'),
+            }
+
+        print(f'\nExtracting {feature_name} [open_clip] features...\n')
+        extract_clip_features(vr, params, output_dir=output_dir, overwrite_ok=overwrite_ok)
+        
+
+
+    elif feature_name == 'pe_core':
+        
+        modelzoo_dir = inputs.get('modelzoo', None)
+        if modelzoo_dir is not None:
+            # should be called before `transformers`
+            os.environ['HF_HOME'] = modelzoo_dir
+        
+        from vidfeats.clip_features.clip_extractor import extract_pe_features
+        
+        params = {
+            'model_name': inputs.get('model_name', "PE-Core-B16-224"),
+            'device': inputs.get('device', None),
+            'image_resize_mode': inputs.get('image_resize_mode'),
+            }
+
+        print(f'\nExtracting {feature_name} [Facebook PE-Core] features...\n')
+        extract_pe_features(vr, params, output_dir=output_dir, overwrite_ok=overwrite_ok)
+        
+        
     # More feature extraction methods can be added here.
     
 
@@ -371,6 +421,21 @@ if __name__ == "__main__":
     parser.add_argument('--frame_height_org', type=int,
                         help='Originial frame height for a padded video.')
     
+    parser.add_argument('--arch', type=str,
+                        help='CLIP model architecture (e.g., ViT-B-32, ViT-L-14)')
+    parser.add_argument('--pretrained', type=str,
+                        help='Pretrained source for the CLIP model (e.g., openai, laion2b_s34b_b79k)')
+
+    parser.add_argument('--model_name', type=str,
+                        help='Name of the PE-Core model (e.g., PE-Core-B16-224)')
+
+    parser.add_argument('--image_resize_mode', type=str, default='squash', 
+                        choices=['squash', 'shortest', 'longest'],
+                        help='Options for Clip and PE-Core features: "squash", "shortest" [i.e. CenterCrop], "longest" [i.e. CenterCropOrPad] ')
+
+    parser.add_argument('--device', type=str, default='cuda',
+                        help='Device to run inference on (e.g., "cuda" or "cpu")')
+
     # Parse command-line arguments
     args = parser.parse_args()
 

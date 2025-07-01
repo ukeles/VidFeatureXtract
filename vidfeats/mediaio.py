@@ -46,7 +46,7 @@ def get_pts_av(video_file, fps):
         # than using packets from container.demux(stream) to handle dts values. 
         dts, pts = [], []
         for frame in container.decode(stream): 
-            dts_time = float(frame.dts*frame.time_base) if frame.dts is not None else np.NaN
+            dts_time = float(frame.dts*frame.time_base) if frame.dts is not None else np.nan
             dts.append(dts_time)
             pts.append(frame.time) # alternatively: float(frame.pts * frame.time_base)
 
@@ -142,7 +142,7 @@ def get_pts_mediaplayer(video_file, fps):
     assert not np.isnan(pts_med).any(), "PTS contains NaN values."
 
     # Prepare the PTS array with an extra NaN value for the last frame
-    pts_med_r = np.r_[pts_med[1:], np.NaN]
+    pts_med_r = np.r_[pts_med[1:], np.nan]
 
     # Calculate average frame time and fill the last NaN value
     avg_frame_time = 1. / fps
