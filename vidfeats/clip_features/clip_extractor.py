@@ -63,13 +63,16 @@ def extract_clip_features(
     model.eval()
 
     nframes = vr.frame_count # Number of frames in the video.
-    # resolution_wh = vr.resolution # Resolution of the video (width, height).
-    basename = vr.basename # Base name of the video file.
     extract_frames = vr.extraction_frames
 
-    # Construct output filenames
+    if extract_frames is not None:
+        print(f'Performing feature extraction for {len(extract_frames)} of {nframes} total frames...\n')
+        vid_basename = f'{vr.basename}_fps_{vr.extraction_fps}'
+    else:
+        vid_basename = vr.basename
+        
     outfile_feats = os.path.join(output_dir, 
-         f'{basename}_{arch}_{pretrained}_{image_resize_mode[:2]}_features.npy')
+         f'{vid_basename}_{arch}_{pretrained}_{image_resize_mode[:2]}_features.npy')
 
     # Check if output files already exist
     check_outputfile(outfile_feats, overwrite_ok)
@@ -163,15 +166,17 @@ def extract_pe_features(
     model.eval()
     preprocess = pe_transforms.get_image_transform(model.image_size, center_crop)
     
-
     nframes = vr.frame_count # Number of frames in the video.
-    # resolution_wh = vr.resolution # Resolution of the video (width, height).
-    basename = vr.basename # Base name of the video file.
     extract_frames = vr.extraction_frames
 
-    # Construct output filenames
+    if extract_frames is not None:
+        print(f'Performing feature extraction for {len(extract_frames)} of {nframes} total frames...\n')
+        vid_basename = f'{vr.basename}_fps_{vr.extraction_fps}'
+    else:
+        vid_basename = vr.basename
+        
     outfile_feats = os.path.join(output_dir, 
-                 f'{basename}_{model_name}_{image_resize_mode[:2]}_features.npy')
+                 f'{vid_basename}_{model_name}_{image_resize_mode[:2]}_features.npy')
 
     # Check if output files already exist
     check_outputfile(outfile_feats, overwrite_ok)
