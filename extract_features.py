@@ -268,6 +268,7 @@ def run_feature_extraction(inputs):
             'pretrained': inputs.get('pretrained', "laion2b_s34b_b88k"),
             'device': inputs.get('device', None),
             'image_resize_mode': inputs.get('image_resize_mode'),
+            'show_progress': inputs.get('show_progress'),
             }
 
         print(f'\nExtracting {feature_name} [open_clip] features...\n')
@@ -288,6 +289,7 @@ def run_feature_extraction(inputs):
             'model_name': inputs.get('model_name', "PE-Core-B16-224"),
             'device': inputs.get('device', None),
             'image_resize_mode': inputs.get('image_resize_mode'),
+            'show_progress': inputs.get('show_progress'),
             }
 
         print(f'\nExtracting {feature_name} [Facebook PE-Core] features...\n')
@@ -435,6 +437,11 @@ if __name__ == "__main__":
 
     parser.add_argument('--device', type=str, default='cuda',
                         help='Device to run inference on (e.g., "cuda" or "cpu")')
+
+    parser.add_argument('--show_progress', type=str2bool, default=True,
+                        help='Whether or not show a progress bar while extracting features')
+
+
 
     # Parse command-line arguments
     args = parser.parse_args()

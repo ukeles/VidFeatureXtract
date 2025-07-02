@@ -77,9 +77,18 @@ def extract_clip_features(
     # Check if output files already exist
     check_outputfile(outfile_feats, overwrite_ok)
     
+    
+    if params.get('show_progress'):
+        iter_func = tqdm
+    else:
+        def no_op_iter(x, total=None):  # No-operation iterator
+            return x
+        iter_func = no_op_iter
+    
+    
     features = []
     with torch.no_grad():
-        for fii, frame_ii in enumerate(tqdm(vr, total=nframes)):
+        for fii, frame_ii in enumerate(iter_func(vr, total=nframes)):
 
             # slow but in general a safer way for loading specific frames
             if extract_frames is not None and fii not in extract_frames:
@@ -181,9 +190,17 @@ def extract_pe_features(
     # Check if output files already exist
     check_outputfile(outfile_feats, overwrite_ok)
     
+    if params.get('show_progress'):
+        iter_func = tqdm
+    else:
+        def no_op_iter(x, total=None):  # No-operation iterator
+            return x
+        iter_func = no_op_iter
+    
+    
     features = []
     with torch.no_grad():
-        for fii, frame_ii in enumerate(tqdm(vr, total=nframes)):
+        for fii, frame_ii in enumerate(iter_func(vr, total=nframes)):
 
             # slow but in general a safer way for loading specific frames
             if extract_frames is not None and fii not in extract_frames:
