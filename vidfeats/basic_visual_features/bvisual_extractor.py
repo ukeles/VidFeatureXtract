@@ -43,9 +43,6 @@ def extract_colors(vr, output_dir, overwrite_ok=False):
     resolution_wh = vr.resolution # Resolution of the video (width, height).
     basename = vr.basename # Base name of the video file.
     
-    # Calculate the total number of pixels in a frame
-    num_pixels = np.prod(resolution_wh, dtype=float)
-    
     # Construct output filenames
     outfile_vals = os.path.join(output_dir, f'{basename}_rgbhsvl_vals.npy')
     outfile_delta = os.path.join(output_dir, f'{basename}_rgbhsvl_delta.npy')
@@ -60,41 +57,37 @@ def extract_colors(vr, output_dir, overwrite_ok=False):
     
     # Iterate over each frame to extract features
     for fii, frame_rgb in enumerate(tqdm(vr, total=nframes)):
-        
-        # For the first frame, initialize previous frame values to zero
+
         if fii == 0:
-            frame_pre_rgb = np.zeros(frame_rgb.shape)
-            frame_pre_hsv = np.zeros(frame_rgb.shape)
-            frame_pre_lum = np.zeros((frame_rgb.shape[0], frame_rgb.shape[1]))
-    
+            # optional: check resolution here
+            h, w = frame_rgb.shape[:2]
+            assert (w, h) == resolution_wh
+
         # Convert the frame from RGB to HSV and LAB (for luminance)
-        frame_hsv = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2HSV).astype(float)  # We start from RGB.
-        frame_lum = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2LAB)[:,:,0].astype(float)
-        
+        frame_rgb_f = frame_rgb.astype(float)
+        frame_hsv   = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2HSV).astype(float)  # We start from RGB.
+        frame_lum   = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2LAB)[:, :, 0].astype(float)
+
         # Calculate the frame-to-frame difference (delta) for each channel
-        delta_rgb = np.abs(frame_rgb - frame_pre_rgb).sum(0).sum(0) / num_pixels
-        delta_hsv = np.abs(frame_hsv - frame_pre_hsv).sum(0).sum(0) / num_pixels
-        delta_lum = np.abs(frame_lum - frame_pre_lum).sum() / num_pixels
-        keep_delta[fii,:] = np.r_[delta_rgb, delta_hsv, delta_lum]
+        if fii == 0:
+            keep_delta[0] = 0
+        else:
+            delta_rgb = np.abs(frame_rgb_f - frame_pre_rgb).mean(axis=(0, 1))
+            delta_hsv = np.abs(frame_hsv   - frame_pre_hsv).mean(axis=(0, 1))
+            delta_lum = np.abs(frame_lum   - frame_pre_lum).mean()
+            keep_delta[fii] = np.r_[delta_rgb, delta_hsv, delta_lum]
         
         # Calculate the mean value for each channel in the current frame
-        rgb_vals = frame_rgb.sum(0).sum(0) / num_pixels
-        hsv_vals = frame_hsv.sum(0).sum(0) / num_pixels
-        lum_vals = frame_lum.sum() / num_pixels
-        keep_vals[fii,:] = np.r_[rgb_vals, hsv_vals, lum_vals]
+        rgb_vals = frame_rgb_f.mean(axis=(0, 1))
+        hsv_vals = frame_hsv.mean(axis=(0, 1))
+        lum_val  = frame_lum.mean()
+        keep_vals[fii] = np.r_[rgb_vals, hsv_vals, lum_val]
         
-        # Update the 'previous frame' variables for the next iteration
-        frame_pre_rgb = frame_rgb.copy()
-        frame_pre_hsv = frame_hsv.copy()
-        frame_pre_lum = frame_lum.copy()
-    
-    # Assert the frame resolution is as expected
-    assert (frame_rgb.shape[1], frame_rgb.shape[0]) == resolution_wh
-    
+        frame_pre_rgb, frame_pre_hsv, frame_pre_lum = frame_rgb_f, frame_hsv, frame_lum
+        
     # Save the extracted feature values and deltas to .npy files
     np.save(outfile_vals, keep_vals)
     np.save(outfile_delta, keep_delta)
-
 
 
 
